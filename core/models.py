@@ -8,8 +8,7 @@ class Recipient(models.Model):
 
     A recipient is a unique combination of recipient_id, recipient_list_id, and email_campaign_id.
     This model stores details such as recipient's first name, last name, company name and email address,
-    as well as the recipient's status in the recipient list and email campaign whether the recipient 
-    have yet opened the email or not.
+    as well as the information such as recipient's opened the email or clicked on the link.
     """
     email_address = EmailField(max_length=255)
     first_name = CharField(max_length=255, blank=True, null=True)
@@ -18,7 +17,7 @@ class Recipient(models.Model):
     recipient_id = IntegerField()
     recipient_list_id = IntegerField()
     email_campaign_id = IntegerField()
-    status = models.BooleanField(default=False)
+    opened = models.BooleanField(default=False)
     clicked = models.BooleanField(default=False)
 
     def __str__(self):
