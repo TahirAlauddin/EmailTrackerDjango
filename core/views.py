@@ -17,23 +17,21 @@ def render_1_by_1_pixel(request, email_details):
     
     tracking_result = pytracking.get_open_tracking_result(
         full_url, base_open_tracking_url=f"{request.get_host()}/1by1pixel/",
-        # encryption_bytestring_key=key,
+        encryption_bytestring_key=key,
         )
     
     recipient_id = tracking_result.metadata['recipient_id']
     email_campaign_id = tracking_result.metadata['email_campaign_id']
-    recipient_list_id = tracking_result.metadata['recipient_list_id']
 
     recipients = Recipient.objects.filter(recipient_id=recipient_id,
                                         email_campaign_id=email_campaign_id,
-                                        recipient_list_id=recipient_list_id,
                                         )
     if recipients:
         recipient = recipients.first()
         recipient.status = True
         recipient.save()
     
-    red = Image.new('RGBA', (randint(1, 50), randint(1, 50)), (randint(0,255),randint(0, 255),randint(0, 255),0))
+    red = Image.new('RGBA', (1, 1), (randint(0,255),randint(0, 255),randint(0, 255),0))
     response = HttpResponse(content_type="image/png")
     red.save(response, "PNG")
     return response
@@ -45,17 +43,15 @@ def render_link_clicked(request, email_details):
     
     tracking_result = pytracking.get_open_tracking_result(
         full_url, base_open_tracking_url=f"{request.get_host()}/link-clicked/",
-        # encryption_bytestring_key=key,
+        encryption_bytestring_key=key,
         )
     
     recipient_id = tracking_result.metadata['recipient_id']
     email_campaign_id = tracking_result.metadata['email_campaign_id']
-    recipient_list_id = tracking_result.metadata['recipient_list_id']
     tracked_url = tracking_result.tracked_url
 
     recipients = Recipient.objects.filter(recipient_id=recipient_id,
                             email_campaign_id=email_campaign_id,
-                            recipient_list_id=recipient_list_id,
                             )
     if recipients:
         recipient = recipients.first()
@@ -73,12 +69,10 @@ def get_open_tracking_url(request):
         try:
             recipient_id = request.POST['recipient_id']
             email_campaign_id = request.POST['email_campaign_id']
-            recipient_list_id = request.POST['recipient_list_id']
             
             recipient_count = Recipient.objects.filter(
                                     recipient_id=recipient_id,
-                                    email_campaign_id=email_campaign_id,
-                                    recipient_list_id=recipient_list_id,      
+                                    email_campaign_id=email_campaign_id,    
                                 ).count()
             if recipient_count < 1:
                 return JsonResponse({'error': 'Recipient doesn\'t exist. Please create a new recipient'})
@@ -89,9 +83,8 @@ def get_open_tracking_url(request):
                 include_webhook_url=False)
            
             tracking_url = pytracking.get_open_tracking_url(
-                {"recipient_id": recipient_id, "email_campaign_id": email_campaign_id,
-                "recipient_list_id": recipient_list_id},             
-                # encryption_bytestring_key=key,
+                {"recipient_id": recipient_id, "email_campaign_id": email_campaign_id},             
+                encryption_bytestring_key=key,
                 configuration=configuration)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=404)
@@ -107,15 +100,13 @@ def get_click_tracking_url(request):
         try:
             recipient_id = request.POST['recipient_id']
             email_campaign_id = request.POST['email_campaign_id']
-            recipient_list_id = request.POST['recipient_list_id']
             configuration = pytracking.Configuration(
                 base_open_tracking_url=f"{request.get_host()}/{url}/",
                 include_webhook_url=False)
 
             recipients = Recipient.objects.filter(
                 recipient_id=recipient_id,
-                email_campaign_id=email_campaign_id,
-                recipient_list_id=recipient_list_id,      
+                email_campaign_id=email_campaign_id,    
             )
             if len(recipients) < 1:
                 return JsonResponse({'error': 'Recipient doesn\'t exist. Please create a new recipient'})
@@ -127,9 +118,8 @@ def get_click_tracking_url(request):
             tracking_url = pytracking.get_click_tracking_url(
                 request.POST['url'],
                 {"recipient_id": recipient_id, 
-                "email_campaign_id": email_campaign_id,
-                "recipient_list_id": recipient_list_id},             
-                # encryption_bytestring_key=key,
+                "email_campaign_id": email_campaign_id},             
+                encryption_bytestring_key=key,
                 configuration=configuration)
             
         except Exception as e:
@@ -144,8 +134,8 @@ def list_recipients(request):
     recipients = []
     for recipient in recipients_query:
         recipients.append({'email_address': recipient.email_address, 'email_campaign_id': recipient.email_campaign_id,
-                        'recipient_id': recipient.recipient_id, 'recipient_list_id': recipient.recipient_list_id,
-                        'status': recipient.status, 'first_name': recipient.first_name, 'last_name': recipient.last_name,
+                        'recipient_id': recipient.recipient_id, 'status': recipient.status,
+                        'first_name': recipient.first_name, 'last_name': recipient.last_name,
                         'company_name': recipient.company_name, 'clicked': recipient.clicked})
     return JsonResponse(recipients, safe=False)
 
@@ -156,20 +146,17 @@ def create_recipient(request):
 
         recipient_id = request.POST['recipient_id']
         email_campaign_id = request.POST['email_campaign_id']
-        recipient_list_id = request.POST['recipient_list_id']
         email_address = request.POST['email_address']
         first_name = request.POST['first_name']
         last_name = request.POST['last_name']
         company_name = request.POST['company_name']
 
         recipient_count = Recipient.objects.filter(recipient_id=recipient_id,
-                    email_campaign_id=email_campaign_id,
-                    recipient_list_id=recipient_list_id).count()
+                    email_campaign_id=email_campaign_id).count()
         
         if recipient_count < 1:
             Recipient(recipient_id=recipient_id,
                 email_campaign_id=email_campaign_id,
-                recipient_list_id=recipient_list_id,
                 email_address=email_address,
                 first_name=first_name,
                 last_name=last_name,
