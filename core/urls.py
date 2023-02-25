@@ -11,5 +11,5 @@ urlpatterns = [
     path('get_click_tracking_url/', get_click_tracking_url), 
     path('list-recipients/', list_recipients),
     path('create-recipient/', create_recipient),
-    path('analytics/<str:email_campaign_id>', get_analytics_of_email),
+    path('analytics/<str:email_campaign_id>/', get_analytics_of_email),
 ]

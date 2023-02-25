@@ -128,56 +128,64 @@ def get_click_tracking_url(request):
         return JsonResponse({'url': tracking_url})
 
 
-
 def list_recipients(request):
     recipients_query = Recipient.objects.all()
     recipients = []
-    for recipient in recipients_query:
-        recipients.append({'email_address': recipient.email_address, 'email_campaign_id': recipient.email_campaign_id,
-                        'recipient_id': recipient.recipient_id, 'status': recipient.status,
-                        'first_name': recipient.first_name, 'last_name': recipient.last_name,
-                        'company_name': recipient.company_name, 'clicked': recipient.clicked})
-    return JsonResponse(recipients, safe=False)
+    try:
+        for recipient in recipients_query:
+            recipients.append({'email_address': recipient.email_address,
+                            'email_campaign_id': recipient.email_campaign_id,
+                            'recipient_id': recipient.recipient_id, 'opened': recipient.opened,
+                            'first_name': recipient.first_name, 'last_name': recipient.last_name,
+                            'company_name': recipient.company_name, 'clicked': recipient.clicked})
+        return JsonResponse(recipients, safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 
 @csrf_exempt
 def create_recipient(request):
     if request.method == 'POST':
+        try:
+            recipient_id = request.POST['recipient_id']
+            email_campaign_id = request.POST['email_campaign_id']
+            email_address = request.POST['email_address']
+            first_name = request.POST['first_name']
+            last_name = request.POST['last_name']
+            company_name = request.POST['company_name']
 
-        recipient_id = request.POST['recipient_id']
-        email_campaign_id = request.POST['email_campaign_id']
-        email_address = request.POST['email_address']
-        first_name = request.POST['first_name']
-        last_name = request.POST['last_name']
-        company_name = request.POST['company_name']
-
-        recipient_count = Recipient.objects.filter(recipient_id=recipient_id,
-                    email_campaign_id=email_campaign_id).count()
-        
-        if recipient_count < 1:
-            Recipient(recipient_id=recipient_id,
-                email_campaign_id=email_campaign_id,
-                email_address=email_address,
-                first_name=first_name,
-                last_name=last_name,
-                company_name=company_name).save()
-        
-            return JsonResponse({'message': 'Recipient Successfully created!'}, status=201)
-        
-        return JsonResponse({'message': 'Recipient already exists!'}, status=404)
+            recipient_count = Recipient.objects.filter(recipient_id=recipient_id,
+                        email_campaign_id=email_campaign_id).count()
+            
+            if recipient_count < 1:
+                Recipient(recipient_id=recipient_id,
+                    email_campaign_id=email_campaign_id,
+                    email_address=email_address,
+                    first_name=first_name,
+                    last_name=last_name,
+                    company_name=company_name).save()
+            
+                return JsonResponse({'message': 'Recipient Successfully created!'}, status=201)
+            
+            return JsonResponse({'message': 'Recipient already exists!'}, status=404)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
     
 
 def get_analytics_of_email(request, email_campaign_id):
     recipients = Recipient.objects.filter(email_campaign_id=email_campaign_id)
 
-    opened = clicks = 0
-    if len(recipients) >=1 :
-        for recipient in recipients:
-            if recipient.clicked:
-                clicks += 1
-            if recipient.opened:
-                opened += 1
+    try:
+        opened = clicks = 0
+        if len(recipients) >=1 :
+            for recipient in recipients:
+                if recipient.clicked:
+                    clicks += 1
+                if recipient.opened:
+                    opened += 1
 
-        return JsonResponse({'opened': opened, 'clicks': clicks}, status=200)
-    return JsonResponse({'message': 'No recipient found in this campaign'}, status=404)
+            return JsonResponse({'opened': opened, 'clicks': clicks}, status=200)
+        return JsonResponse({'message': 'No recipient found in this campaign'}, status=404)
 
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
