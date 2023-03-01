@@ -28,7 +28,7 @@ def render_1_by_1_pixel(request, email_details):
                                         )
     if recipients:
         recipient = recipients.first()
-        recipient.status = True
+        recipient.opened = True
         recipient.save()
     
     red = Image.new('RGBA', (1, 1), (randint(0,255),randint(0, 255),randint(0, 255),0))
@@ -189,3 +189,9 @@ def get_analytics_of_email(request, email_campaign_id):
 
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+    
+
+def handle_authorization_code(request):
+    authorization_code = request.GET['code']
+    print(authorization_code)
+    return HttpResponse("You are all set! You can close the browser now!")

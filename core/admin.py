@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Recipient
-# Register your models here.
+from .models import Recipient, AppUser
 
 admin.site.register(Recipient)
+admin.site.register(AppUser)
