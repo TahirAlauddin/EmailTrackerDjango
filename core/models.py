@@ -19,7 +19,7 @@ class Recipient(models.Model):
     email_campaign_id = IntegerField()
     opened = models.BooleanField(default=False)
     clicked = models.BooleanField(default=False)
-    from_user = models.ForeignKey('AppUser', on_delete=models.CASCADE)
+    sender = models.ForeignKey('AppUser', on_delete=models.CASCADE)
 
     def __str__(self):
         return self.email_address
@@ -28,17 +28,16 @@ class Recipient(models.Model):
         """Make sure there is only one row with same recipient_id and email_campaign_id"""
         constraints = [
             models.UniqueConstraint(
-                fields=['recipient_id', 'email_campaign_id', 'from_user'],
+                fields=['recipient_id', 'email_campaign_id', 'sender'],
                 name='unique_recipient_per_campaign'
             )
         ]
 
 
 class AppUser(models.Model):
-    first_name = models.CharField(verbose_name=_('first name'), max_length=254, null=True)
-    last_name = models.CharField(verbose_name=_('last name'), max_length=254, null=True)
+    user_name = models.CharField(verbose_name=_('user name'), max_length=254, null=True)
     date_joined = models.DateTimeField(auto_now_add=True, verbose_name=_("date joined"))
-    license = models.CharField(max_length=12, verbose_name=_("License Key"))
+    license = models.CharField(max_length=12, verbose_name=_("License Key"), unique=True)
     email_address = models.EmailField(
         _('Email'),
         max_length=150,
@@ -56,4 +55,3 @@ class AppUser(models.Model):
         verbose_name = _("App User")
         verbose_name_plural = _("App Users")
         db_table = "core_appuser"
-
